@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Noten Cockpit+ | Deine Noten im Griff</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Afacad+Flux:wght@400;500;700&family=Coming+Soon&family=Inter:wght@700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --primary: #00ffa6;
+        --bg: #040707;
+        --card-bg: rgba(255, 255, 255, 0.03);
+        --faq-bg: rgba(
+          15,
+          20,
+          20,
+          0.95
+        ); /* Weniger durchsichtig für bessere Lesbarkeit */
+        --border: rgba(0, 255, 166, 0.2);
+        --secondary-text: #daf0f7;
+        --untis-orange: #ff8200;
+      }
+
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg);
+        font-family: "Afacad Flux", sans-serif;
+        color: white;
+        scroll-behavior: smooth;
+        overflow-x: hidden;
+      }
+
+      canvas {
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      .wrapper {
+        position: relative;
+        z-index: 10;
+      }
+
+      /* Navigation */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        padding: 1rem 3rem;
+        z-index: 100;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(4, 7, 7, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .nav-right {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+      }
+
+      .nav-link {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+        text-decoration: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+      }
+
+      .nav-link:hover {
+        opacity: 0.7;
+      }
+
+      .logo {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .logo span {
+        color: var(--primary);
+      }
+
+      /* Hero Section */
+      .hero {
+        position: relative;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 6%;
+      }
+
+      .hero-content {
+        max-width: 900px;
+        z-index: 2;
+      }
+
+      .hero-main-text {
+        font-family: "Inter", sans-serif;
+        font-size: clamp(48px, 9vw, 92px);
+        font-weight: 700;
+        color: #ffffff;
+        line-height: 1;
+        margin: 0;
+        letter-spacing: -0.04em;
+      }
+
+      .hero-sub-text {
+        font-family: "Coming Soon", cursive;
+        font-size: clamp(30px, 5vw, 58px);
+        color: var(--secondary-text);
+        margin: 0.5rem 0 0 0;
+        line-height: 1.2;
+      }
+
+      /* Download Buttons */
+      .download-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 3rem;
+        align-items: center;
+      }
+
+      .download-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        color: white;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .download-btn:hover {
+        background: rgba(255, 255, 255, 0.12);
+        border-color: var(--primary);
+        transform: translateY(-2px);
+      }
+
+      .download-btn svg {
+        width: 22px;
+        height: 22px;
+      }
+
+      .download-btn .btn-text {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+        text-align: left;
+      }
+
+      .download-btn .btn-text span:first-child {
+        font-size: 0.6rem;
+        opacity: 0.7;
+        text-transform: uppercase;
+      }
+
+      .download-btn .btn-text span:last-child {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      /* Features & Pricing General */
+      .section-container {
+        padding: 100px 6% 80px 6%;
+      }
+
+      .section-header {
+        text-align: center;
+        margin-bottom: 4rem;
+        opacity: 0;
+        transform: translateY(30px);
+        transition: all 0.8s ease-out;
+      }
+
+      .section-header.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .section-header h2 {
+        font-family: "Inter", sans-serif;
+        font-size: clamp(32px, 5vw, 54px);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+
+      .section-header h2 span {
+        color: var(--primary);
+      }
+
+      /* Grid Layouts */
+      .features-grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .feature-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        padding: 2.5rem;
+        border-radius: 24px;
+        backdrop-filter: blur(10px);
+        opacity: 0;
+        transform: translateY(40px);
+        transition: all 0.6s ease-out;
+      }
+
+      .feature-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-10px) !important;
+        border-color: var(--primary);
+        background: rgba(0, 255, 166, 0.05);
+      }
+
+      .feature-card .icon {
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .feature-card h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 1rem;
+      }
+
+      .feature-card p {
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 1.6;
+        margin: 0;
+      }
+
+      /* Pricing Specific */
+      .pricing-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+      }
+
+      .pricing-card {
+        background: var(--card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        padding: 3rem 2rem;
+        border-radius: 32px;
+        display: flex;
+        flex-direction: column;
+        transition: all 0.4s ease;
+        opacity: 0;
+        transform: translateY(40px);
+        backdrop-filter: blur(10px);
+      }
+
+      .pricing-card.featured {
+        border: 1px solid var(--primary);
+        background: rgba(0, 255, 166, 0.05);
+        position: relative;
+      }
+
+      .pricing-card.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .price-value {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 1rem 0;
+        font-family: "Inter", sans-serif;
+      }
+
+      .price-value span {
+        font-size: 1rem;
+        opacity: 0.5;
+      }
+
+      .pricing-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 2rem 0;
+        flex-grow: 1;
+      }
+
+      .pricing-list li {
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        opacity: 0.8;
+      }
+
+      .pricing-list li::before {
+        content: "✓";
+        color: var(--primary);
+        font-weight: bold;
+      }
+
+      .cta-btn {
+        width: 100%;
+        padding: 12px;
+        border-radius: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: white;
+      }
+
+      .cta-btn.primary {
+        background: var(--primary);
+        color: black;
+        border: none;
+      }
+
+      .cta-btn:hover {
+        transform: scale(1.02);
+        border-color: var(--primary);
+      }
+
+      .badge {
+        position: absolute;
+        top: -15px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--primary);
+        color: black;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+      }
+
+      /* FAQ Styling */
+      .faq-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+
+      .faq-item {
+        background: var(
+          --faq-bg
+        ); /* Erhöhte Deckkraft für bessere Lesbarkeit */
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(20px); /* Verstärkter Blur-Effekt */
+      }
+
+      .faq-question {
+        padding: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #ffffff;
+      }
+
+      .faq-question:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .faq-answer {
+        padding: 0 1.5rem;
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease-out;
+        opacity: 0;
+        color: rgba(255, 255, 255, 0.85); /* Etwas hellerer Text für Kontrast */
+        line-height: 1.6;
+      }
+
+      .faq-item.active {
+        border-color: var(--primary);
+        box-shadow: 0 0 20px rgba(0, 255, 166, 0.1);
+      }
+
+      .faq-item.active .faq-answer {
+        padding-bottom: 1.5rem;
+        max-height: 300px;
+        opacity: 1;
+      }
+
+      .faq-item.active .faq-icon {
+        transform: rotate(45deg);
+        color: var(--primary);
+      }
+
+      .faq-icon {
+        transition: transform 0.3s ease;
+        font-size: 1.5rem;
+      }
+
+      /* Footer */
+      footer {
+        padding: 4rem 6%;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+      }
+
+      .footer-top {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+      }
+
+      .footer-links {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .shine-button {
+        padding: 10px 24px;
+        font-weight: 600;
+        color: #000;
+        background: var(--primary);
+        border-radius: 100px;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0, 255, 166, 0.3);
+      }
+
+      @media (max-width: 768px) {
+        nav {
+          padding: 1rem 1.5rem;
+        }
+        .hero {
+          text-align: center;
+          align-items: center;
+        }
+        .download-container {
+          justify-content: center;
+        }
+        .footer-top {
+          flex-direction: column;
+          text-align: center;
+        }
+        .footer-links {
+          gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas"></canvas>
+
+    <div class="wrapper">
+      <nav>
+        <a href="#" class="logo">Noten Cockpit<span>+</span></a>
+        <div class="nav-right">
+          <button
+            class="nav-link"
+            onclick="
+              document
+                .getElementById('features')
+                .scrollIntoView({ behavior: 'smooth' })
+            "
+          >
+            Features
+          </button>
+          <button
+            class="nav-link"
+            onclick="
+              document
+                .getElementById('pricing')
+                .scrollIntoView({ behavior: 'smooth' })
+            "
+          >
+            Preise
+          </button>
+          <button class="shine-button">Get Now</button>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div class="hero-content">
+          <h1 class="hero-main-text">Noten im Blick</h1>
+          <p class="hero-sub-text">und den Erfolg im Griff</p>
+
+          <div class="download-container">
+            <a href="#" class="download-btn interaction-item">
+              <svg viewBox="0 0 384 512" fill="white">
+                <path
+                  d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"
+                />
+              </svg>
+              <div class="btn-text">
+                <span>Laden im</span><span>App Store</span>
+              </div>
+            </a>
+            <a href="#" class="download-btn interaction-item">
+              <svg viewBox="0 0 512 512" fill="white">
+                <path
+                  d="M325.3 234.3L104.6 13l280.8 161.2-60.1 60.1zM47 0C34 6.8 25.3 19.2 25.3 35.3v441.3c0 16.1 8.7 28.5 21.7 35.3l256.6-256.6L47 0zm425.2 225.6l-58.9-34.1-65.7 64.5 65.7 64.5 60.1-34.1c18-14.3 18-46.5-1.2-60.8zM104.6 499l280.8-161.2-60.1-60.1L104.6 499z"
+                />
+              </svg>
+              <div class="btn-text">
+                <span>JETZT BEI</span><span>Google Play</span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-container" id="features">
+        <div class="section-header">
+          <h2>Deine Features für <span>Top-Noten</span></h2>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="icon">✨</div>
+            <h3>KI-Zeugnis-Scan</h3>
+            <p>
+              Scanne dein altes Zeugnis ab – unsere KI erkennt alle Fächer und
+              Noten automatisch.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">📈</div>
+            <h3>Live-Schnitt</h3>
+            <p>
+              Dein Durchschnitt aktualisiert sich in Echtzeit bei jeder neuen
+              Eingabe.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🔗</div>
+            <h3>Untis-Planer</h3>
+            <p>
+              Synchronisiere deinen Stundenplan und lasse Entfallzeiten direkt
+              einfließen.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🎯</div>
+            <h3>Noten-Ziele</h3>
+            <p>
+              Setze dir Wunsch-Durchschnitte und die App sagt dir, was du in der
+              nächsten Arbeit brauchst.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">📅</div>
+            <h3>Prüfungs-Tracker</h3>
+            <p>
+              Alle Termine im Überblick mit automatischer Erinnerung an
+              Lernphasen.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">📊</div>
+            <h3>Entwicklung</h3>
+            <p>
+              Detaillierte Graphen zeigen dir genau, in welchen Fächern du dich
+              verbesserst.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-container" id="pricing">
+        <div class="section-header">
+          <h2>Der passende <span>Plan</span></h2>
+        </div>
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <h3>Free</h3>
+            <div class="price-value">0€<span>/Monat</span></div>
+            <ul class="pricing-list">
+              <li>Notenverwaltung</li>
+              <li>Schnitt-Berechnung</li>
+              <li>Manueller Import</li>
+            </ul>
+            <button class="cta-btn">Kostenlos starten</button>
+          </div>
+
+          <div class="pricing-card featured">
+            <div class="badge">Beliebteste Wahl</div>
+            <h3>Cockpit+</h3>
+            <div class="price-value">1,99€<span>/Monat</span></div>
+            <ul class="pricing-list">
+              <li>KI-Zeugnis-Scan</li>
+              <li>Untis-Synchronisation</li>
+              <li>Noten-Prognosen</li>
+              <li>Cloud Backup</li>
+            </ul>
+            <button class="cta-btn primary">Jetzt upgraden</button>
+          </div>
+
+          <div class="pricing-card">
+            <h3>Lifetime</h3>
+            <div class="price-value">19,99€<span>/Einmal</span></div>
+            <ul class="pricing-list">
+              <li>Alle Plus Features</li>
+              <li>Kein Abo mehr</li>
+              <li>Support-Prio</li>
+              <li>Exklusive Icons</li>
+            </ul>
+            <button class="cta-btn">Einmal kaufen</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Sektion -->
+      <section class="section-container">
+        <div class="section-header">
+          <h2>Häufige <span>Fragen</span></h2>
+        </div>
+        <div class="faq-container">
+          <div class="faq-item">
+            <div class="faq-question">
+              Sind meine Daten sicher?
+              <span class="faq-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Absolut. Deine Noten werden lokal auf deinem Gerät verschlüsselt.
+              Wenn du Cockpit+ nutzt, werden sie für das Backup sicher auf
+              EU-Servern gespeichert. Wir verkaufen niemals Daten an Dritte.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">
+              Wie funktioniert der Untis-Import?
+              <span class="faq-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Du loggst dich einfach einmalig mit deinen Untis-Zugangsdaten in
+              der App ein. Wir ziehen uns automatisch deinen Stundenplan und
+              deine Fächer, damit du sie nicht manuell anlegen musst.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">
+              Was passiert beim KI-Scan?
+              <span class="faq-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Unsere KI analysiert das Foto deines Zeugnisses, extrahiert die
+              Fachnamen und die dazugehörigen Noten. Das spart dir ca. 10
+              Minuten Tipparbeit und funktioniert auch bei handschriftlichen
+              Notizen meist fehlerfrei.
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question">
+              Gibt es auch eine Web-Version?
+              <span class="faq-icon">+</span>
+            </div>
+            <div class="faq-answer">
+              Aktuell konzentrieren wir uns voll auf die iOS- und Android-App,
+              um das beste mobile Erlebnis zu bieten. Eine Web-Version für den
+              Desktop ist jedoch für Ende 2026 geplant.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div class="footer-top">
+          <div class="logo">Noten Cockpit<span>+</span></div>
+          <div class="footer-links">
+            <a href="#" class="nav-link">Impressum</a>
+            <a href="#" class="nav-link">Datenschutz</a>
+            <a href="#" class="nav-link">Cookies</a>
+            <a href="#" class="nav-link">Kontakt</a>
+            <a href="#" class="nav-link">Nutzungsbedingungen</a>
+          </div>
+        </div>
+        <div style="opacity: 0.5; font-size: 0.9rem">© 2026 Noten Cockpit+</div>
+      </footer>
+    </div>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      const mouse = { x: -1000, y: -1000 };
+      const MAX_RADIUS = 150;
+      let targetRadius = MAX_RADIUS;
+      let currentRadius = MAX_RADIUS;
+      let points = [];
+
+      class Point {
+        constructor(x, y) {
+          this.baseX = x;
+          this.baseY = y;
+          this.x = x;
+          this.y = y;
+          this.density = Math.random() * 30 + 1;
+        }
+        draw() {
+          ctx.fillStyle = "#138A5D";
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        update() {
+          let dx = mouse.x - this.x;
+          let dy = mouse.y - this.y;
+          let distance = Math.sqrt(dx * dx + dy * dy);
+          if (distance < currentRadius) {
+            let force = (currentRadius - distance) / currentRadius;
+            this.x -= (dx / distance) * force * this.density;
+            this.y -= (dy / distance) * force * this.density;
+          } else {
+            this.x += (this.baseX - this.x) * 0.1;
+            this.y += (this.baseY - this.y) * 0.1;
+          }
+        }
+      }
+
+      function init() {
+        points = [];
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        for (let y = 0; y < canvas.height; y += 18) {
+          for (let x = 0; x < canvas.width; x += 18) {
+            points.push(new Point(x, y));
+          }
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        currentRadius += (targetRadius - currentRadius) * 0.1;
+        points.forEach((p) => {
+          p.update();
+          p.draw();
+        });
+        requestAnimationFrame(animate);
+      }
+
+      // FAQ Funktionalität
+      document.querySelectorAll(".faq-question").forEach((item) => {
+        item.addEventListener("click", () => {
+          const parent = item.parentElement;
+          parent.classList.toggle("active");
+        });
+      });
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add("visible");
+          });
+        },
+        { threshold: 0.1 },
+      );
+
+      document
+        .querySelectorAll(".section-header, .feature-card, .pricing-card")
+        .forEach((el) => observer.observe(el));
+
+      window.addEventListener("mousemove", (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+      });
+
+      document
+        .querySelectorAll(
+          ".feature-card, .pricing-card, .faq-item, nav, footer, .interaction-item, .cta-btn, .shine-button, .download-btn",
+        )
+        .forEach((el) => {
+          el.addEventListener("mouseenter", () => (targetRadius = 0));
+          el.addEventListener("mouseleave", () => (targetRadius = MAX_RADIUS));
+        });
+
+      window.addEventListener("resize", init);
+      window.onload = () => {
+        init();
+        animate();
+      };
+    </script>
+  </body>
+</html>
